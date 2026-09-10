@@ -1,0 +1,10 @@
+# Dependências / ambiente
+node_modules/
+.env
+.env.local
+
+# Sistema / editor
+.DS_Store
+Thumbs.db
+.vscode/
+*.log
