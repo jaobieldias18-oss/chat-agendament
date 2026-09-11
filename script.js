@@ -37,6 +37,33 @@ async function sb(path, opts = {}) {
   return r.json();
 }
 
+// IA via Edge Function (GROQ_API_KEY fica só no servidor)
+const chatHistory = [];
+async function askGroq(text) {
+  const el = document.createElement('div');
+  el.className = 'bot';
+  el.textContent = 'Digitando...';
+  messagesEl.appendChild(el);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+  try {
+    const r = await fetch(SUPABASE_URL + '/functions/v1/chat', {
+      method: 'POST',
+      headers: {
+        apikey: SUPABASE_KEY,
+        Authorization: 'Bearer ' + SUPABASE_KEY,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ message: text, history: chatHistory.slice(-8) })
+    });
+    const data = await r.json();
+    el.textContent = data.reply || data.error || 'Tive um problema. Tente de novo.';
+    chatHistory.push({ role: 'user', content: text }, { role: 'assistant', content: el.textContent });
+  } catch (e) {
+    el.textContent = 'Sem conexão com a IA agora. Use os botões acima. 👆';
+  }
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
 async function loadServices() {
   try {
     state.allServices = await sb('services?select=*&active=eq.true&order=name');
@@ -204,7 +231,7 @@ form.addEventListener('submit', e => {
     state.phone = t;
     askServices();
   } else {
-    say('Use os botões acima pra continuar. 👆');
+    askGroq(t); // fora de nome/telefone, a IA responde; o agendamento segue pelos botões
   }
 });
 
