@@ -39,6 +39,43 @@ async function sb(path, opts = {}) {
 
 // IA via Edge Function (GROQ_API_KEY fica só no servidor)
 const chatHistory = [];
+
+// Valida o nome com a IA: saudação sem nome não é aceita como nome
+async function checkName(text) {
+  const el = document.createElement('div');
+  el.className = 'bot';
+  el.textContent = 'Digitando...';
+  messagesEl.appendChild(el);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+  try {
+    const r = await fetch(SUPABASE_URL + '/functions/v1/chat', {
+      method: 'POST',
+      headers: {
+        apikey: SUPABASE_KEY,
+        Authorization: 'Bearer ' + SUPABASE_KEY,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ message: text, task: 'name_check' })
+    });
+    const data = await r.json();
+    el.remove();
+    if (data.name) {
+      state.name = data.name;
+      state.step = 'phone';
+      say(data.reply || `Oi, ${data.name}! Qual seu telefone/WhatsApp?`);
+      chatHistory.push({ role: 'user', content: text }, { role: 'assistant', content: data.reply || '' });
+    } else {
+      say(data.reply || 'Oi! Tudo bem? Qual é o seu nome?');
+    }
+  } catch (e) {
+    el.remove();
+    // sem IA: aceita como nome (comportamento antigo)
+    state.name = text;
+    state.step = 'phone';
+    say(`Oi, ${text}! Qual seu telefone/WhatsApp?`);
+  }
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+}
 async function askGroq(text) {
   const el = document.createElement('div');
   el.className = 'bot';
@@ -224,12 +261,15 @@ form.addEventListener('submit', e => {
   say(t, 'user');
   input.value = '';
   if (state.step === 'name') {
-    state.name = t;
-    state.step = 'phone';
-    say(`Oi, ${t}! Qual seu telefone/WhatsApp?`);
+    checkName(t);
   } else if (state.step === 'phone') {
-    state.phone = t;
-    askServices();
+    const digits = t.replace(/\D/g, '');
+    if (digits.length < 8 || digits.length > 15) {
+      say('Esse número parece incompleto. Manda seu WhatsApp com DDD, só números. 📱');
+    } else {
+      state.phone = t;
+      askServices();
+    }
   } else {
     askGroq(t); // fora de nome/telefone, a IA responde; o agendamento segue pelos botões
   }
