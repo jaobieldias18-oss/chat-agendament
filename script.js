@@ -174,11 +174,24 @@ async function showSlots() {
   state.step = 'slot';
   say('Buscando horários livres...');
   clearPanel();
-  let booked = [];
+  // 1. Tenta o cálculo NO BANCO (lê a tabela appointments via rpc/free_slots)
+  let free = null;
   try {
-    const { start, end } = dayRangeISO(state.date);
-    booked = await sb(`appointments?select=starts_at,ends_at&status=neq.cancelado&starts_at=gte.${start}&starts_at=lte.${end}`);
-  } catch (e) { booked = []; }
+    const r = await sb('rpc/free_slots', {
+      method: 'POST',
+      body: JSON.stringify({ p_day: state.date, p_duration_min: state.duration })
+    });
+    if (Array.isArray(r)) free = r.map(x => x.slot);
+  } catch (e) { free = null; }
+
+  // 2. Fallback local (mesma regra) se o SQL novo ainda não foi rodado
+  let booked = [];
+  if (!free) {
+    try {
+      const { start, end } = dayRangeISO(state.date);
+      booked = await sb(`appointments?select=starts_at,ends_at&status=neq.cancelado&starts_at=gte.${start}&starts_at=lte.${end}`);
+    } catch (e) { booked = []; }
+  }
 
   const slots = [];
   for (let m = OPEN_START; m + SLOT <= OPEN_END; m += SLOT) {
@@ -195,8 +208,13 @@ async function showSlots() {
     const s = new Date(`${state.date}T${t}:00`).getTime();
     const e = s + need * 60000;
     const dayEnd = new Date(`${state.date}T19:30:00`).getTime();
-    let busy = e > dayEnd || s < now - 60000;
-    if (!busy) busy = bookedRanges.some(([bs, be]) => s < be && e > bs);
+    let busy;
+    if (free) {
+      busy = !free.includes(t); // banco já excluiu ocupados, passado e domingo
+    } else {
+      busy = e > dayEnd || s < now - 60000;
+      if (!busy) busy = bookedRanges.some(([bs, be]) => s < be && e > bs);
+    }
     const b = document.createElement('button');
     b.className = 'slot' + (busy ? ' busy' : '');
     b.textContent = t;
