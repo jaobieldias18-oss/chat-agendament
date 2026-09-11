@@ -35,9 +35,9 @@ create index if not exists idx_appointments_status on appointments(status);
 
 -- 2. Seed: barba 20, cabelo 30, sobrancelha 10
 insert into services (name, price, duration_min) values
-  ('Corte de cabelo', 30, 40),
-  ('Barba', 20, 30),
-  ('Sobrancelha', 10, 20)
+  ('Corte de cabelo', 30, 30),
+  ('Barba', 20, 15),
+  ('Sobrancelha', 10, 5)
 on conflict (name) do update set
   price = excluded.price,
   duration_min = excluded.duration_min,

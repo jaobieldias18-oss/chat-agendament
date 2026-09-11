@@ -107,9 +107,9 @@ async function loadServices() {
   } catch (e) {
     // fallback local se o SQL ainda não foi rodado
     state.allServices = [
-      { id: 'cabelo', name: 'Corte de cabelo', price: 30, duration_min: 40 },
-      { id: 'barba', name: 'Barba', price: 20, duration_min: 30 },
-      { id: 'sobrancelha', name: 'Sobrancelha', price: 10, duration_min: 20 }
+      { id: 'cabelo', name: 'Corte de cabelo', price: 30, duration_min: 30 },
+      { id: 'barba', name: 'Barba', price: 20, duration_min: 15 },
+      { id: 'sobrancelha', name: 'Sobrancelha', price: 10, duration_min: 5 }
     ];
   }
 }
