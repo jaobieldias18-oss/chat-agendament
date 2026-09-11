@@ -145,23 +145,33 @@ function askServices() {
 
 function askDate() {
   state.step = 'date';
-  say('Qual dia? (Seg–Sáb)');
+  say('Escolha o dia:');
   clearPanel();
-  const inp = document.createElement('input');
-  inp.type = 'date';
-  inp.min = new Date().toISOString().slice(0, 10);
-  const ok = document.createElement('button');
-  ok.className = 'primary';
-  ok.textContent = 'Ver horários livres';
-  ok.onclick = async () => {
-    if (!inp.value) { say('Escolha uma data.'); return; }
-    const d = new Date(inp.value + 'T12:00:00');
-    if (d.getDay() === 0) { say('Domingo fechado. Escolha outro dia.'); return; }
-    state.date = inp.value;
-    say(inp.value.split('-').reverse().join('/'), 'user');
-    await showSlots();
-  };
-  panel.append(inp, ok);
+  const DOW = ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB'];
+  const MON = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+  for (let i = 0; i < 14; i++) {
+    const d = new Date();
+    d.setDate(d.getDate() + i);
+    const iso = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    const sunday = d.getDay() === 0;
+    const b = document.createElement('button');
+    b.className = 'day' + (sunday ? ' closed' : '');
+    b.style.animationDelay = (i * 0.04) + 's';
+    const sp = document.createElement('span'); sp.textContent = i === 0 ? 'HOJE' : DOW[d.getDay()];
+    const nb = document.createElement('b'); nb.textContent = d.getDate();
+    const sm = document.createElement('small'); sm.textContent = MON[d.getMonth()];
+    b.append(sp, nb, sm);
+    if (sunday) {
+      b.title = 'Fechado aos domingos';
+    } else {
+      b.onclick = () => {
+        state.date = iso;
+        say(d.getDate() + '/' + (d.getMonth() + 1), 'user');
+        showSlots();
+      };
+    }
+    panel.appendChild(b);
+  }
 }
 
 function dayRangeISO(dateStr) {
@@ -204,21 +214,35 @@ async function showSlots() {
   const need = Math.ceil(state.duration / SLOT) * SLOT; // ex: 70min -> ocupa 90min
   const now = Date.now();
 
-  slots.forEach(t => {
-    const s = new Date(`${state.date}T${t}:00`).getTime();
-    const e = s + need * 60000;
-    const dayEnd = new Date(`${state.date}T19:30:00`).getTime();
-    let busy;
-    if (free) {
-      busy = !free.includes(t); // banco já excluiu ocupados, passado e domingo
-    } else {
-      busy = e > dayEnd || s < now - 60000;
-      if (!busy) busy = bookedRanges.some(([bs, be]) => s < be && e > bs);
-    }
+  // Só mostra os LIVRES: horário ocupado some da lista
+  // (o agendamento salvo grava início+fim, então outro cliente nunca vê o mesmo horário)
+  let avail;
+  if (free) {
+    avail = free;
+  } else {
+    avail = slots.filter(t => {
+      const s = new Date(`${state.date}T${t}:00`).getTime();
+      const e = s + need * 60000;
+      const dayEnd = new Date(`${state.date}T19:30:00`).getTime();
+      if (e > dayEnd || s < now - 60000) return false;
+      return !bookedRanges.some(([bs, be]) => s < be && e > bs);
+    });
+  }
+  if (!avail.length) {
+    say('Esse dia lotou. Escolha outra data. 📅');
+    const back = document.createElement('button');
+    back.className = 'primary';
+    back.textContent = 'Escolher outra data';
+    back.onclick = askDate;
+    panel.appendChild(back);
+    return;
+  }
+  avail.forEach((t, i) => {
     const b = document.createElement('button');
-    b.className = 'slot' + (busy ? ' busy' : '');
+    b.className = 'slot pop';
+    b.style.animationDelay = (i * 0.03) + 's';
     b.textContent = t;
-    if (!busy) b.onclick = () => confirmSlot(t);
+    b.onclick = () => confirmSlot(t);
     panel.appendChild(b);
   });
   say('Toque num horário livre:');

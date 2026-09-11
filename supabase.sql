@@ -109,3 +109,81 @@ end;
 $$;
 
 grant execute on function public.free_slots(date, int) to anon, authenticated;
+
+-- 5. Grade fixa de horários (30 em 30 min) + agendamentos em português
+create table if not exists horarios (
+  id uuid primary key default gen_random_uuid(),
+  dia date not null,
+  horario time not null,
+  disponivel boolean not null default true,
+  created_at timestamptz not null default now(),
+  unique (dia, horario)
+);
+
+create table if not exists agendamentos (
+  id uuid primary key default gen_random_uuid(),
+  nome text not null,
+  telefone text not null,
+  horario_id uuid not null references horarios(id) on delete restrict,
+  servicos text not null default '',
+  total numeric(10,2) not null default 0,
+  status text not null default 'confirmado',
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_horarios_dia on horarios(dia);
+create index if not exists idx_horarios_disp on horarios(disponivel);
+
+-- Seed: próximos 14 dias (exceto domingo), 09:00–19:00 de 30 em 30 min
+insert into horarios (dia, horario)
+select d::date, (time '09:00' + (m || ' minutes')::interval)::time
+from generate_series(current_date, current_date + 13, '1 day'::interval) d,
+     generate_series(0, 600, 30) m
+where extract(isodow from d::date) <> 7
+on conflict (dia, horario) do nothing;
+
+-- Ao agendar, o horário fica indisponível; ao cancelar/excluir, volta a ficar livre
+create or replace function public.sync_horario_disp()
+returns trigger language plpgsql as $$
+begin
+  if TG_OP = 'INSERT' then
+    update horarios set disponivel = false where id = NEW.horario_id;
+    return NEW;
+  elsif TG_OP = 'DELETE' then
+    update horarios set disponivel = true where id = OLD.horario_id;
+    return OLD;
+  elsif TG_OP = 'UPDATE' and NEW.status = 'cancelado' and OLD.status <> 'cancelado' then
+    update horarios set disponivel = true where id = NEW.horario_id;
+    return NEW;
+  end if;
+  return NEW;
+end;
+$$;
+
+drop trigger if exists trg_agend_insert on agendamentos;
+create trigger trg_agend_insert after insert on agendamentos
+  for each row execute function public.sync_horario_disp();
+
+drop trigger if exists trg_agend_delete on agendamentos;
+create trigger trg_agend_delete after delete on agendamentos
+  for each row execute function public.sync_horario_disp();
+
+drop trigger if exists trg_agend_cancel on agendamentos;
+create trigger trg_agend_cancel after update on agendamentos
+  for each row execute function public.sync_horario_disp();
+
+-- RLS
+alter table horarios enable row level security;
+alter table agendamentos enable row level security;
+
+drop policy if exists "horarios_read" on horarios;
+create policy "horarios_read" on horarios
+  for select to anon, authenticated using (true);
+
+drop policy if exists "agendamentos_insert" on agendamentos;
+create policy "agendamentos_insert" on agendamentos
+  for insert to anon, authenticated with check (true);
+
+drop policy if exists "agendamentos_read" on agendamentos;
+create policy "agendamentos_read" on agendamentos
+  for select to anon, authenticated using (true);

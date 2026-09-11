@@ -11,6 +11,14 @@ body { font-family: sans-serif; margin: 0; background: #0b141a; }
 .chip, .slot { border: 1px solid #075e54; background: #fff; color: #075e54; border-radius: 20px; padding: 8px 12px; cursor: pointer; font-size: 14px; }
 .chip.sel { background: #075e54; color: #fff; }
 .slot.busy { opacity: .4; text-decoration: line-through; pointer-events: none; }
+.day { display: flex; flex-direction: column; align-items: center; min-width: 56px; border: 1px solid #075e54; background: #fff; color: #075e54; border-radius: 14px; padding: 8px 6px; cursor: pointer; opacity: 0; animation: pop .3s ease forwards; }
+.day span { font-size: 10px; font-weight: bold; }
+.day b { font-size: 20px; line-height: 1.2; }
+.day small { font-size: 10px; opacity: .8; }
+.day.closed { opacity: 0; border-color: #ccc; color: #aaa; pointer-events: none; text-decoration: line-through; }
+.day:not(.closed):active { transform: scale(.93); }
+.pop { opacity: 0; animation: pop .25s ease forwards; }
+@keyframes pop { from { opacity: 0; transform: translateY(8px) scale(.95); } to { opacity: 1; transform: none; } }
 #panel button.primary { background: #075e54; color: #fff; border: none; border-radius: 20px; padding: 10px 16px; cursor: pointer; width: 100%; }
 #form { display: flex; padding: 8px; background: #f0f2f5; }
 #input { flex: 1; padding: 10px 14px; border: none; border-radius: 20px; outline: none; }
