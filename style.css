@@ -52,6 +52,15 @@ body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #0b141a; }
 .card-sucesso.lead a { color: #15803d; font-weight: bold; text-decoration: none; }
 .ghost-link { display: block; text-align: center; width: 100%; color: #475569; font-size: 13px; padding: 6px; text-decoration: none; }
 .painter-link { display: block; text-align: center; font-size: 12px; color: #64748b; padding: 6px; text-decoration: none; background: #f0f2f5; }
+/* Login admin */
+#login-screen { position: absolute; inset: 0; background: #0b141a; display: flex; justify-content: center; align-items: center; z-index: 10; padding: 20px; }
+.login-box { background: #fff; border-radius: 16px; padding: 28px 24px; width: 100%; max-width: 340px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,.4); }
+.login-box h2 { margin: 0 0 4px; color: #1e40af; }
+.login-box p { margin: 0 0 14px; font-size: 13px; color: #64748b; }
+.login-box input { width: 100%; padding: 12px; margin-bottom: 10px; border: 1.5px solid #cbd5e1; border-radius: 10px; font-size: 15px; }
+.login-box .primary { width: 100%; background: #f97316; color: #fff; border: none; border-radius: 10px; padding: 12px; font-weight: bold; font-size: 15px; cursor: pointer; }
+#login-err { color: #dc2626; font-size: 13px; margin-top: 8px; min-height: 18px; }
+#chat { position: relative; }
 /* Evita zoom automático no iPhone */
 #input { font-size: 16px; }
 

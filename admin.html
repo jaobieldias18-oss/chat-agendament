@@ -8,7 +8,17 @@
 </head>
 <body>
   <div id="chat">
-    <div id="header">🎨 Painel do Pintor <small>Orçamentos recebidos • <span id="status-dot">● online</span></small></div>
+    <div id="login-screen">
+      <div class="login-box">
+        <h2>🎨 Painel do Pintor</h2>
+        <p>Área restrita — faça login</p>
+        <input id="login-user" type="text" placeholder="Usuário" autocomplete="username" />
+        <input id="login-pass" type="password" placeholder="Senha" autocomplete="current-password" />
+        <button class="primary" id="btn-login">Entrar</button>
+        <div id="login-err"></div>
+      </div>
+    </div>
+    <div id="header">🎨 Painel do Pintor <small>Orçamentos recebidos • <span id="status-dot">● online</span> • <a href="#" id="btn-logout" style="color:#fff">sair</a></small></div>
     <div id="prices-bar">Toque em atualizar para ver os pedidos novos</div>
     <div id="admin-stats"></div>
     <div id="messages"></div>
@@ -61,8 +71,30 @@
       }
     }
     document.getElementById('btn-reload').onclick = load;
-    load();
-    setInterval(load, 30000);
+    // Login simples (teste escolar — não é segurança real, a senha fica visível no código)
+    const loginScreen = document.getElementById('login-screen');
+    function checkLogin() {
+      if (sessionStorage.getItem('pintor_logado') === '1') { loginScreen.style.display = 'none'; load(); }
+      else { loginScreen.style.display = 'flex'; }
+    }
+    document.getElementById('btn-login').onclick = () => {
+      const u = document.getElementById('login-user').value.trim();
+      const p = document.getElementById('login-pass').value;
+      if (u === 'pintor' && p === '123') {
+        sessionStorage.setItem('pintor_logado', '1');
+        document.getElementById('login-err').textContent = '';
+        checkLogin();
+      } else {
+        document.getElementById('login-err').textContent = 'Usuário ou senha errados.';
+      }
+    };
+    document.getElementById('btn-logout').onclick = e => {
+      e.preventDefault();
+      sessionStorage.removeItem('pintor_logado');
+      checkLogin();
+    };
+    checkLogin();
+    setInterval(() => { if (sessionStorage.getItem('pintor_logado') === '1') load(); }, 30000);
   </script>
 </body>
 </html>
