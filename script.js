@@ -103,6 +103,36 @@ function askPhone() {
   say(`Oi, ${state.name}! Qual seu telefone/WhatsApp com DDD?`);
 }
 
+// Reconhecimento de nome: saudação sozinha NÃO é nome; "meu nome é X" extrai X
+function normTxt(s) {
+  return (s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z ]/g, ' ').trim().replace(/\s+/g, ' ');
+}
+function isGreetingOnly(t) {
+  const s = normTxt(t);
+  const g = ['oi', 'oie', 'oii', 'oiii', 'ola', 'ei', 'opa', 'eae', 'eai', 'hello', 'hi', 'hey', 'bom dia', 'boa tarde', 'boa noite', 'tudo bem', 'tudo bom', 'como vai', 'fala', 'salve', 'fala ai', 'opa tudo bem'];
+  if (g.includes(s)) return true;
+  const w = s.split(' ');
+  if (w.length <= 3 && (w[0] === 'oi' || w[0] === 'ola' || w[0] === 'opa' || w[0] === 'ei')) return true;
+  return false;
+}
+function capName(s) {
+  return s.trim().split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+}
+function extractName(t) {
+  const m = t.match(/(?:meu nome [ée] |me chamo |sou o?a? |aqui [ée] o?a? |quem fala [ée] o?a? )([A-Za-zÀ-ÖØ-öø-ÿ]+(?: [A-Za-zÀ-ÖØ-öø-ÿ]+)?)/i);
+  if (m) return capName(m[1]);
+  return null;
+}
+function handleName(t) {
+  const ext = extractName(t);
+  if (ext) { state.name = ext; askPhone(); return; }
+  if (isGreetingOnly(t)) { say('Oi! Tudo bem? 😊 Qual é o seu nome?'); return; }
+  if (t.trim().length < 2) { say('Me diz seu nome pra continuar?'); return; }
+  if (/\d/.test(t)) { say('Esse parece um telefone. Me diz primeiro o seu nome? 😊'); return; }
+  state.name = capName(t);
+  askPhone();
+}
+
 function askService() {
   state.step = 'service';
   say('Qual tipo de serviço você quer orçar? Toque numa opção:');
@@ -238,9 +268,7 @@ form.addEventListener('submit', e => {
   input.value = '';
 
   if (state.step === 'name') {
-    if (t.length < 2) { say('Me diz seu nome pra continuar?'); return; }
-    state.name = t;
-    askPhone();
+    handleName(t);
   } else if (state.step === 'phone') {
     const digits = t.replace(/\D/g, '');
     if (digits.length < 8 || digits.length > 15) {
