@@ -260,7 +260,7 @@ async function askGroq(text) {
   messagesEl.scrollTop = messagesEl.scrollHeight;
 }
 
-form.addEventListener('submit', e => {
+form.addEventListener('submit', async e => {
   e.preventDefault();
   const t = input.value.trim();
   if (!t) return;
@@ -271,19 +271,26 @@ form.addEventListener('submit', e => {
     handleName(t);
   } else if (state.step === 'phone') {
     const digits = t.replace(/\D/g, '');
-    if (digits.length < 8 || digits.length > 15) {
-      say('Esse número parece incompleto. Manda seu WhatsApp com DDD, só números. 📱');
-    } else {
+    if (digits.length >= 8 && digits.length <= 15) {
       state.phone = t;
       askService();
+    } else if (digits.length === 0 && /[a-zA-ZÀ-ÖØ-öø-ÿ]/.test(t)) {
+      // mensagem fora do fluxo (ex: "tem marmita?"): a IA responde e o fluxo retoma
+      await askGroq(t);
+      say(`${state.name}, pra seguir com seu orçamento preciso do seu WhatsApp com DDD 📱 (ex: 11999998888)`);
+    } else {
+      say('Esse número parece incompleto. Manda seu WhatsApp com DDD, só números. 📱');
     }
   } else if (state.step === 'qty') {
     const q = parseInt(t, 10);
-    if (!Number.isInteger(q) || q <= 0) {
-      say('Digite uma quantidade válida, ex: 2');
-    } else {
+    if (Number.isInteger(q) && q > 0) {
       state.qty = q;
       askVisita();
+    } else if (!/\d/.test(t) && /[a-zA-ZÀ-ÖØ-öø-ÿ]/.test(t)) {
+      await askGroq(t);
+      say(`Voltando aqui: quantos cômodos de ${state.service.nome_exibicao}? (digite só o número)`);
+    } else {
+      say('Digite uma quantidade válida, ex: 2');
     }
   } else {
     askGroq(t);
