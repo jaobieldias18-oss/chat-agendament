@@ -95,7 +95,26 @@ async function loadPrices() {
 function askName() {
   state.step = 'name';
   say('Oi! Sou o assistente virtual do pintor. 🎨');
-  say('Qual é o seu nome?');
+  say('Qual é o seu nome? Ou, se preferir, fale direto com a IA que ela te guia em tudo.');
+  clearPanel();
+  const ia = document.createElement('button');
+  ia.className = 'primary';
+  ia.textContent = '✨ Falar com a IA (ela me guia)';
+  ia.onclick = startIaMode;
+  panel.appendChild(ia);
+}
+
+// MODO IA: conversa livre guiada pela Groq (calcula, pergunta o que falta e salva sozinha)
+function startIaMode() {
+  state.step = 'ia';
+  say('Modo IA ativado', 'user');
+  clearPanel();
+  const back = document.createElement('button');
+  back.className = 'ghost';
+  back.textContent = '🔘 Voltar aos botões';
+  back.onclick = () => { askName(); };
+  panel.appendChild(back);
+  say('Oi! Eu sou a IA do pintor ✨ Me fala seu nome pra começarmos seu orçamento?');
 }
 
 function askPhone() {
@@ -232,7 +251,7 @@ async function askGroq(text) {
         Authorization: 'Bearer ' + SUPABASE_KEY,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ message: text, history: chatHistory.slice(-10) })
+      body: JSON.stringify({ message: text, history: chatHistory.slice(-10), mode: state.step === 'ia' ? 'guia' : '' })
     });
     const data = await r.json();
     el.classList.remove('typing');

@@ -25,7 +25,17 @@ REGRAS DURAS:
 3. Quando o usuário informar tipo e quantidade, chame calcular_orcamento.
 4. Quando tiver os 5 dados + usuário confirmou ("pode salvar", "confirma", "sim"), chame salvar_lead.
 5. Telefone precisa ter 8-15 dígitos. Quantidade precisa ser inteiro > 0.
-6. Sempre mostre o valor calculado como R$ XXX,XX e confirme "lead salvo" após salvar.`;
+6. Sempre mostre o valor calculado como R$ XXX,XX e confirme "lead salvo" após salvar.
+
+MODO GUIA (quando o cliente escolhe "falar com a IA", conduza passo a passo, UMA pergunta por vez):
+1. Cumprimente e descubra o NOME (saudação sozinha como "oi" NÃO é nome — peça o nome; "meu nome é X"/"sou X" contém o nome).
+2. Peça o TELEFONE/WhatsApp com DDD.
+3. Ofereça as 3 opções com preço: Parede lisa R$120, Parede com textura R$180, Teto R$100 por cômodo.
+4. Pergunte a QUANTIDADE de cômodos (número inteiro).
+5. Pergunte se o local é MUITO LONGE (se sim, visite_longa=true e some R$30; se não, sem taxa).
+6. Chame calcular_orcamento e apresente o valor com a conta (preço × qtd + taxa).
+7. Peça confirmação ("posso salvar?") e, com o "sim", chame salvar_lead e comemore com "lead salvo".
+Se o cliente fizer pergunta fora do assunto (ex: "tem marmita?"), responda com humor curto (você é pintor, não vende marmita) e RETOME de onde parou, sem perder os dados já coletados.`;
 
 const TOOLS = [
   {
@@ -82,7 +92,10 @@ Deno.serve(async (req) => {
     if (!GROQ) return Response.json({ error: 'GROQ_API_KEY não configurada. Rode: supabase secrets set GROQ_API_KEY=...' }, { status: 500, headers: cors });
     if (!SB_URL || !SB_SVC) return Response.json({ error: 'Configure SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY nos secrets.' }, { status: 500, headers: cors });
 
-    const { message = '', history = [] } = await req.json();
+    const { message = '', history = [], mode = '' } = await req.json();
+    const system = mode === 'guia'
+      ? SYSTEM + '\nVocê está no MODO GUIA: conduza o cliente pelo passo a passo acima, uma pergunta por vez, sem pular etapas.'
+      : SYSTEM;
 
     async function groq(messages: unknown[]) {
       const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -112,7 +125,7 @@ Deno.serve(async (req) => {
     }
 
     // 1ª chamada: IA decide o que fazer
-    const data = await groq([{ role: 'system', content: SYSTEM }, ...history, { role: 'user', content: message }]);
+    const data = await groq([{ role: 'system', content: system }, ...history, { role: 'user', content: message }]);
     const msg = data.choices?.[0]?.message;
     const calls = msg?.tool_calls ?? [];
 
@@ -173,7 +186,7 @@ Deno.serve(async (req) => {
 
     // 2ª chamada: IA gera resposta final com o resultado do banco
     const data2 = await groq([
-      { role: 'system', content: SYSTEM + '\nMostre o valor como R$ com vírgula. Se salvou, diga "lead salvo, o pintor vai te ligar".' },
+      { role: 'system', content: system + '\nMostre o valor como R$ com vírgula. Se salvou, diga "lead salvo, o pintor vai te ligar".' },
       ...history,
       { role: 'user', content: message },
       { role: 'assistant', content: msg?.content ?? null, tool_calls: calls },
