@@ -1,25 +1,71 @@
-body { font-family: sans-serif; margin: 0; background: #0b141a; }
-#chat { max-width: 480px; margin: 0 auto; height: 100vh; display: flex; flex-direction: column; background: #efeae2; }
-#header { background: #075e54; color: #fff; padding: 12px 16px; font-weight: bold; }
-#header small { display: block; font-weight: normal; font-size: 12px; opacity: .9; }
+body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #0b141a; }
+* { box-sizing: border-box; }
+/* MOBILE FIRST: ocupa 100% da tela do celular */
+#chat { width: 100%; max-width: 100%; margin: 0 auto; height: 100dvh; display: flex; flex-direction: column; background: #efeae2; box-shadow: none; }
+#header { background: linear-gradient(135deg, #1e40af, #1e3a8a); color: #fff; padding: 14px 16px; font-weight: bold; font-size: 17px; }
+#header small { display: block; font-weight: normal; font-size: 12px; opacity: .9; margin-top: 2px; }
+#status-dot { color: #4ade80; font-weight: bold; }
+#prices-bar { background: #fff7ed; color: #9a3412; font-size: 12px; padding: 8px 12px; text-align: center; border-bottom: 1px solid #fed7aa; font-weight: 600; }
 #messages { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
-.bot, .user { max-width: 80%; padding: 8px 12px; border-radius: 12px; font-size: 14px; line-height: 1.4; }
-.bot { background: #fff; align-self: flex-start; }
+.bot, .user { max-width: 82%; padding: 9px 13px; border-radius: 14px; font-size: 14px; line-height: 1.45; white-space: pre-line; }
+.bot { background: #fff; align-self: flex-start; box-shadow: 0 1px 2px rgba(0,0,0,.1); }
 .user { background: #d9fdd3; align-self: flex-end; }
-#panel { padding: 8px; display: flex; flex-wrap: wrap; gap: 8px; background: #f0f2f5; max-height: 40vh; overflow-y: auto; }
+.bot.typing { opacity: .7; font-style: italic; }
+/* Cards exigidos pelo professor: valor calculado + confirmação */
+.card-orcamento, .card-sucesso { max-width: 88%; border-radius: 16px; padding: 14px 16px; align-self: flex-start; box-shadow: 0 2px 8px rgba(0,0,0,.15); animation: pop .3s ease; }
+.card-orcamento { background: #eff6ff; border: 2px solid #1e40af; }
+.card-sucesso { background: #f0fdf4; border: 2px solid #16a34a; }
+.card-orcamento h3, .card-sucesso h3 { margin: 0 0 8px; font-size: 15px; }
+.card-orcamento h3 { color: #1e40af; }
+.card-sucesso h3 { color: #15803d; }
+.card-orcamento .linha, .card-sucesso .linha { font-size: 13px; color: #334155; margin: 2px 0; }
+.valor-grande { font-size: 28px; font-weight: 800; color: #1e40af; margin: 8px 0 2px; }
+.card-sucesso .valor-grande { color: #15803d; }
+.selo { display: inline-block; font-size: 11px; font-weight: bold; padding: 3px 10px; border-radius: 20px; margin-bottom: 6px; }
+.selo.valor { background: #1e40af; color: #fff; }
+.selo.ok { background: #16a34a; color: #fff; }
+#panel { padding: 10px; display: flex; flex-wrap: wrap; gap: 8px; background: #f0f2f5; max-height: 40vh; overflow-y: auto; border-top: 1px solid #ddd; }
 #panel:empty { display: none; }
-.chip, .slot { border: 1px solid #075e54; background: #fff; color: #075e54; border-radius: 20px; padding: 8px 12px; cursor: pointer; font-size: 14px; }
-.chip.sel { background: #075e54; color: #fff; }
+.chip, .slot { border: 1.5px solid #1e40af; background: #fff; color: #1e40af; border-radius: 20px; padding: 9px 13px; cursor: pointer; font-size: 13.5px; font-weight: 600; transition: transform .1s; }
+.chip:hover, .slot:hover { transform: scale(1.03); }
+.chip small { display: block; font-weight: normal; font-size: 11px; opacity: .8; }
 .slot.busy { opacity: .4; text-decoration: line-through; pointer-events: none; }
-.day { display: flex; flex-direction: column; align-items: center; min-width: 56px; border: 1px solid #075e54; background: #fff; color: #075e54; border-radius: 14px; padding: 8px 6px; cursor: pointer; opacity: 0; animation: pop .3s ease forwards; }
+.day { display: flex; flex-direction: column; align-items: center; min-width: 56px; border: 1px solid #1e40af; background: #fff; color: #1e40af; border-radius: 14px; padding: 8px 6px; cursor: pointer; opacity: 0; animation: pop .3s ease forwards; }
 .day span { font-size: 10px; font-weight: bold; }
 .day b { font-size: 20px; line-height: 1.2; }
 .day small { font-size: 10px; opacity: .8; }
 .day.closed { opacity: 0; border-color: #ccc; color: #aaa; pointer-events: none; text-decoration: line-through; }
-.day:not(.closed):active { transform: scale(.93); }
 .pop { opacity: 0; animation: pop .25s ease forwards; }
 @keyframes pop { from { opacity: 0; transform: translateY(8px) scale(.95); } to { opacity: 1; transform: none; } }
-#panel button.primary { background: #075e54; color: #fff; border: none; border-radius: 20px; padding: 10px 16px; cursor: pointer; width: 100%; }
+#panel button.primary { background: #f97316; color: #fff; border: none; border-radius: 12px; padding: 12px 16px; cursor: pointer; width: 100%; font-weight: bold; font-size: 15px; }
+#panel button.primary:hover { background: #ea580c; }
+#panel button.ghost { background: #fff; color: #475569; border: 1px solid #cbd5e1; border-radius: 12px; padding: 10px; cursor: pointer; width: 100%; }
 #form { display: flex; padding: 8px; background: #f0f2f5; }
-#input { flex: 1; padding: 10px 14px; border: none; border-radius: 20px; outline: none; }
-#form button { border: none; background: #00a884; color: #fff; border-radius: 50%; width: 42px; height: 42px; margin-left: 8px; cursor: pointer; }
+#input { flex: 1; padding: 11px 14px; border: none; border-radius: 20px; outline: none; font-size: 14px; }
+#form button { border: none; background: #f97316; color: #fff; border-radius: 50%; width: 44px; height: 44px; margin-left: 8px; cursor: pointer; font-size: 17px; flex-shrink: 0; }
+/* Evita zoom automático no iPhone */
+#input { font-size: 16px; }
+
+/* TABLET */
+@media (min-width: 600px) {
+  #messages { padding: 16px 20px; gap: 10px; }
+  .bot, .user { font-size: 15px; }
+  #panel { padding: 12px 16px; }
+}
+
+/* COMPUTADOR: tela cheia larga, chat centralizado e maior */
+@media (min-width: 1024px) {
+  body { display: flex; justify-content: center; align-items: stretch; }
+  #chat { width: 100%; max-width: 1100px; height: 100vh; border-left: 1px solid #334155; border-right: 1px solid #334155; }
+  #header { font-size: 20px; padding: 18px 28px; }
+  #prices-bar { font-size: 14px; padding: 10px; }
+  #messages { padding: 24px 40px; gap: 12px; }
+  .bot, .user { font-size: 15.5px; max-width: 60%; }
+  .card-orcamento, .card-sucesso { max-width: 520px; padding: 20px 24px; }
+  .valor-grande { font-size: 36px; }
+  #panel { padding: 14px 40px; gap: 10px; max-height: 32vh; }
+  .chip, .slot { font-size: 15px; padding: 12px 18px; }
+  #panel button.primary { font-size: 17px; padding: 14px; max-width: 520px; }
+  #panel button.ghost { max-width: 520px; }
+  #form { padding: 12px 40px; }
+}
