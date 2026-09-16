@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Painel do Pintor — Orçamentos</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="chat">
+    <div id="header">🎨 Painel do Pintor <small>Orçamentos recebidos • <span id="status-dot">● online</span></small></div>
+    <div id="prices-bar">Toque em atualizar para ver os pedidos novos</div>
+    <div id="admin-stats"></div>
+    <div id="messages"></div>
+    <div id="panel">
+      <button class="primary" id="btn-reload">🔄 Atualizar pedidos</button>
+      <a class="ghost-link" href="index.html">← Voltar ao chat</a>
+    </div>
+  </div>
+  <script>
+    const SUPABASE_URL = 'https://rfqpnkymkuubnalqcrqs.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_HCZdt_B5gB6CDvGP2QDdOg_xehenqn_';
+    const statsEl = document.getElementById('admin-stats');
+    const messagesEl = document.getElementById('messages');
+    const TIPOS = { parede_lisa: 'Parede lisa', parede_textura: 'Parede com textura', teto: 'Teto' };
+    const fmt = n => 'R$ ' + Number(n).toFixed(2).replace('.', ',');
+    const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+    async function load() {
+      messagesEl.innerHTML = '<div class="bot typing">Carregando pedidos...</div>';
+      try {
+        const r = await fetch(SUPABASE_URL + '/rest/v1/orcamentos?select=*&order=created_at.desc&limit=100', {
+          headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY }
+        });
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        const rows = await r.json();
+        const total = rows.reduce((a, x) => a + Number(x.valor_calculado || 0), 0);
+        statsEl.innerHTML =
+          '<div class="stat"><b>' + rows.length + '</b><span>pedidos</span></div>' +
+          '<div class="stat"><b>' + fmt(total) + '</b><span>total</span></div>';
+        messagesEl.innerHTML = '';
+        if (!rows.length) {
+          messagesEl.innerHTML = '<div class="bot">Nenhum orçamento ainda. Compartilhe o link do chat! 🎨</div>';
+          return;
+        }
+        rows.forEach(o => {
+          const d = document.createElement('div');
+          d.className = 'card-sucesso lead';
+          const data = new Date(o.created_at).toLocaleString('pt-BR');
+          d.innerHTML =
+            '<h3>👤 ' + esc(o.nome) + ' • 📱 ' + esc(o.telefone) + '</h3>' +
+            '<div class="linha">' + esc(TIPOS[o.tipo_servico] || o.tipo_servico) + ' × ' + o.quantidade_comodos + ' cômodo(s)</div>' +
+            '<div class="valor-grande">' + fmt(o.valor_calculado) + '</div>' +
+            '<div class="linha">📅 ' + data + '</div>' +
+            '<div class="linha"><a href="tel:' + esc(String(o.telefone).replace(/\D/g, '')) + '">📞 Ligar</a> • ' +
+            '<a href="https://wa.me/' + esc(String(o.telefone).replace(/\D/g, '')) + '" target="_blank">💬 WhatsApp</a></div>';
+          messagesEl.appendChild(d);
+        });
+      } catch (e) {
+        messagesEl.innerHTML = '<div class="bot">Erro ao carregar: ' + esc(e) + '</div>';
+      }
+    }
+    document.getElementById('btn-reload').onclick = load;
+    load();
+    setInterval(load, 30000);
+  </script>
+</body>
+</html>

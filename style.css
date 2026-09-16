@@ -43,6 +43,15 @@ body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #0b141a; }
 #form { display: flex; padding: 8px; background: #f0f2f5; }
 #input { flex: 1; padding: 11px 14px; border: none; border-radius: 20px; outline: none; font-size: 14px; }
 #form button { border: none; background: #f97316; color: #fff; border-radius: 50%; width: 44px; height: 44px; margin-left: 8px; cursor: pointer; font-size: 17px; flex-shrink: 0; }
+/* Painel admin */
+#admin-stats { display: flex; gap: 10px; padding: 10px 12px; background: #fff; border-bottom: 1px solid #e2e8f0; }
+#admin-stats .stat { flex: 1; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 12px; padding: 8px; text-align: center; }
+#admin-stats .stat b { display: block; font-size: 18px; color: #1e40af; }
+#admin-stats .stat span { font-size: 11px; color: #64748b; }
+.card-sucesso.lead { margin-bottom: 4px; }
+.card-sucesso.lead a { color: #15803d; font-weight: bold; text-decoration: none; }
+.ghost-link { display: block; text-align: center; width: 100%; color: #475569; font-size: 13px; padding: 6px; text-decoration: none; }
+.painter-link { display: block; text-align: center; font-size: 12px; color: #64748b; padding: 6px; text-decoration: none; background: #f0f2f5; }
 /* Evita zoom automático no iPhone */
 #input { font-size: 16px; }
 
